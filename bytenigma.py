@@ -1,36 +1,67 @@
 import base64
 
+class Rotor:
+    def __init__(self, rotor: list[int], next_rotor):
+        self.rotor = rotor
+        self.offset = 0
+        self.next_rotor = next_rotor
+        
+        # reverse_rotor erstellen. allocated sofort das array und jumpt dann beim schreiben rum
+        self.reverse_rotor = [None]*len(rotor)
+        for i in range(len(rotor)):
+            self.reverse_rotor[rotor[i]] = i
+
+    def rotate(self) -> None:
+        if self.rotor[self.offset] == 0 and self.next_rotor is not None:
+            self.next_rotor.rotate()
+            print("Überlauf des Rotors getriggert!")
+        self.offset += 1
+        self.offset %= 256 #wenn 256 erreicht wird zurückgesetzt
+
+    def encrypt(self, input: int) -> int:
+        return self.rotor[(input+self.offset)%256]
+
+    def reverse_encrypt(self, input: int) -> int:
+        return (self.reverse_rotor[input]-self.offset)%256
+
 def bytenigma(data) -> None:
     """Run the bytenigma action."""
 
     rotors = data["rotors"]
     input = base64.b64decode(data["input"])
+    rotorarray = []
 
-    print(encrypt_one(input[0], rotors))
+    previous_rotor = None
+    j = 0
+    for i in reversed(rotors): # der loop muss rückwärts sein, damit der next_rotor schon existiert, wenn der rotor erstellt wird.
+        rotorarray.append(Rotor(i, previous_rotor))
+        previous_rotor = rotorarray[j]
+        j += 1
+    rotorarray = list(reversed(rotorarray)) # muss reversed werden, da die rotoren in der liste in umgekehrter reihenfolge sind
 
+    output = b''
+    for input_byte in input:
+        output = output + encrypt_byte(input_byte, rotorarray)
+        rotorarray[0].rotate()
 
-def encrypt_one(input: bytes, rotors: list[list[int]]) -> bytes:
+    print(base64.b64encode(output))
+
+def encrypt_byte(input: bytes, rotors: list[Rotor]) -> list[bytes]:
     # mit einem byte
-    print("input: " + str(input))
+    print(input, end=">")
 
-    # schritt 1
-    step_1_out = rotors[1][input]
-    print("step 1: " + str(step_1_out))
-
-    # schritt 2
-    step_2_out = rotors[2][step_1_out]
-    print("step 2: " + str(step_2_out))
+    # vorwärts encrypten mit allen rotoren
+    for r in rotors:
+        input = r.encrypt(input)
+        print(input, end=">")
 
     # bitweise komplement
-    step_3_out = step_2_out^0xFF
-    print("step 3: " + str(step_3_out))
+    input = input^0xFF
 
-    # schritt 4 (rotor 2 rückwärts)
-    step_4_out = rotors[2].index(step_3_out)
-    print("step 4: " + str(step_4_out))
+    # alle rückwärts
+    for r in reversed(rotors):
+        input = r.reverse_encrypt(input)
+        print(input, end=">")
 
-    # schritt 5 (rotor 1 rückwärts)
-    step_5_out = rotors[2].index(step_4_out)
-    print("step 5: " + str(step_5_out))
-
-    return step_5_out
+    print(input)
+    return bytes([input])

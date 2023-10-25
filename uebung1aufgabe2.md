@@ -8,6 +8,16 @@ Es ist allerdings zu beachten, dass der Schlüsselraum sich nur bei ausreichende
 
 ## Schwächen
 
-Das Eingabebyte kann nie auch das Ausgabebyte sein.
+Das Eingabebyte kann nie auch das Ausgabebyte sein. In diesem Bias-Plot für 1 Mib Nullen ist dies auch schön zu sehen:
+
+![Bias Plot 1Mib Nullen, incl 0](uebung1aufgabe2_plot1.png)
 
 Sidechannel-Angriff: Es werden (wenn auch nur minimal) mehr Operationen ausgeführt, wenn ein Rotor rotiert wird. Möglicherweise ist dadurch die position der 0 auf dem Rotor feststellbar.
+
+## Bias
+
+In diesem Bias-Plot für 1 Mib Nullen (ausgeschlossen der 0) ist kein Bias zu erkennen:
+
+![Bias Plot 1Mib Nullen, excl 0](uebung1aufgabe2_plot2.png)
+
+

@@ -26,7 +26,7 @@ class Rotor:
     def reverse_encrypt(self, input: int) -> int:
         return (self.reverse_rotor[input]-self.offset)%256
 
-def bytenigma(data) -> None:
+def bytenigma(data) -> bytes:
     """Run the bytenigma action."""
 
     rotors = data["rotors"]
@@ -47,6 +47,7 @@ def bytenigma(data) -> None:
         rotorarray[0].rotate()
 
     print(base64.b64encode(output))
+    return output
 
 def encrypt_byte(input: bytes, rotors: list[Rotor]) -> list[bytes]:
     # mit einem byte

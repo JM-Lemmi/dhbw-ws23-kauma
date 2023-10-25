@@ -1,4 +1,6 @@
 import base64
+import logging
+import hashlib
 
 class Rotor:
     def __init__(self, rotor: list[int], next_rotor):
@@ -14,7 +16,7 @@ class Rotor:
     def rotate(self) -> None:
         if self.rotor[self.offset] == 0 and self.next_rotor is not None:
             self.next_rotor.rotate()
-            print("Überlauf des Rotors getriggert!")
+            logging.debug("Überlauf des Rotors getriggert!")
         self.offset += 1
         self.offset %= 256 #wenn 256 erreicht wird zurückgesetzt
 
@@ -48,12 +50,12 @@ def bytenigma(data) -> None:
 
 def encrypt_byte(input: bytes, rotors: list[Rotor]) -> list[bytes]:
     # mit einem byte
-    print(input, end=">")
+    logging.debug(input, end=">")
 
     # vorwärts encrypten mit allen rotoren
     for r in rotors:
         input = r.encrypt(input)
-        print(input, end=">")
+        logging.debug(input, end=">")
 
     # bitweise komplement
     input = input^0xFF
@@ -61,7 +63,7 @@ def encrypt_byte(input: bytes, rotors: list[Rotor]) -> list[bytes]:
     # alle rückwärts
     for r in reversed(rotors):
         input = r.reverse_encrypt(input)
-        print(input, end=">")
+        logging.debug(input, end=">")
 
-    print(input)
+    logging.debug(input)
     return bytes([input])

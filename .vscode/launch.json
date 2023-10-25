@@ -12,6 +12,15 @@
             "console": "integratedTerminal",
             "args": ["./testcase01.json"],
             "justMyCode": true
+        },
+        {
+            "name": "Profile Performance",
+            "type": "python",
+            "request": "launch",
+            "program": "-m cProfile main.py",
+            "console": "integratedTerminal",
+            "args": ["./testcase01.json"],
+            "justMyCode": true
         }
     ]
 }

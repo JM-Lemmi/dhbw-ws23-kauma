@@ -1,6 +1,5 @@
 import base64
 import logging
-import hashlib
 
 class Rotor:
     def __init__(self, rotor: list[int], next_rotor):
@@ -46,7 +45,6 @@ def bytenigma(data) -> bytes:
         output = output + encrypt_byte(input_byte, rotorarray)
         rotorarray[0].rotate()
 
-    print(base64.b64encode(output))
     return output
 
 def encrypt_byte(input: bytes, rotors: list[Rotor]) -> list[bytes]:

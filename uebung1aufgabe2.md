@@ -20,4 +20,10 @@ In diesem Bias-Plot für 1 Mib Nullen (ausgeschlossen der 0) ist kein Bias zu er
 
 ![Bias Plot 1Mib Nullen, excl 0](uebung1aufgabe2_plot2.png)
 
+Für 1 Mib and random Input sieht der Graph ähnlich aus.
 
+![Bias Plot 1Mib Random](uebung1aufgabe2_plot3.png)
+
+## Indistinguishability
+
+Da das Eingabebyte nie auf sich selbst abgebildet wird, kann Ciphertext von Random text unterschieden werden. (siehe Plot oben)

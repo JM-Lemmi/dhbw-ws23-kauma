@@ -14,12 +14,13 @@ def generate_rotor() -> list[int]:
     random.shuffle(numbers)
     return numbers
 
-onemib = os.urandom(2**20)
+with open("words_alpha.txt", "rb") as f:
+    input = f.read()
 
 # erstelle zufällige bytenigmarotoren
 data = {}
 data["rotors"] = [generate_rotor(), generate_rotor(), generate_rotor()]
-data["input"] = base64.b64encode(onemib)
+data["input"] = base64.b64encode(input)
 output = bytenigma.bytenigma(data)
 
 charcount = [None]*255

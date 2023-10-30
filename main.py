@@ -4,7 +4,7 @@ import sys
 import json
 import base64
 
-import bytenigma
+from Aufgabe01 import bytenigma
 
 with open(sys.argv[1], 'r') as f:
   data = json.load(f)

@@ -35,7 +35,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 while len(ciphertext) < 16: ciphertext += client_socket.recv(1) # Ciphertext
                 while len(l) < 2: l += client_socket.recv(1) # l
                 l_int = int.from_bytes(l, byteorder='little')
-                print(l_int)
 
                 a = bytearray() #results
                 for i in range(l_int):
@@ -47,14 +46,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     try:
                         unpadder = padding.PKCS7(128).unpadder()
                         unpadder.update(plain)
-                    except:
+                        unpadder.finalize()
+                    except ValueError:
                         # unpadding failed
                         a += b'\x00'
                     else:
                         # unpadding succeeded
                         a += b'\x01'
+                        print(f"Unpadding succeeded at position {i}.")
                 
-                print(f"unpadding finished, sending results of length {len(a)}...")
+                print("Unpadding finished.")
                 client_socket.sendall(a)
 
     except KeyboardInterrupt:

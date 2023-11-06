@@ -22,13 +22,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     success = bytearray()
     while len(success) < l: success += s.recv(1)
 
-    print(success[1])
-
     for i, s in enumerate(success):
-        if s == 0:
+        if s == 1:
             print(f"Byte {i} is correct")
             exit(0)
-        elif s == 1:
+        elif s == 0:
             print(f"Byte {i} is wrong")
         else:
             print(f"Weird Bytes returned, wtf: {s}")

@@ -4,6 +4,8 @@
 
 import socket
 import sys
+import time
+
 from cryptography.hazmat.primitives import padding
 
 def xor(x, y): return bytes([a ^ b for a, b in zip(x, y)])
@@ -11,7 +13,11 @@ def xor(x, y): return bytes([a ^ b for a, b in zip(x, y)])
 key = b'\x01\x23\x45\x67\x89\xab\xcd\xef\x01\x23\x45\x67\x89\xab\xcd\xef'
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind(('127.0.0.1', int(sys.argv[1]))) #v4-only dank AF_INET. use AF_INET6 for v6
+    while True:
+        try: s.bind(('127.0.0.1', int(sys.argv[1]))) #v4-only dank AF_INET. use AF_INET6 for v6
+        except OSError: print("Port already in use, retrying..."); time.sleep(1)
+        else: break
+
     s.listen()
     print("Server is listening...")
 

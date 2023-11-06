@@ -1,6 +1,8 @@
 #! /bin/python3
 
-key = b"test"
+import sys
+
+key = bytes.fromhex(sys.argv[1])
 keylen = len(key)
 sbox = list(range(256))
 
@@ -19,10 +21,14 @@ def gen_byte(n):
         sbox[i], sbox[j] = sbox[j], sbox[i]
         yield sbox[(sbox[i]+sbox[j]) % 256]
 
+keystream = bytearray()
+ksa()
 i = 0
 for b in gen_byte(1):
-    print(b)
+    keystream.append(b)
 
     i += 1
-    if i == 256:
+    if i == 32:
         break
+
+print(keystream.hex())

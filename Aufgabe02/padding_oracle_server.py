@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives import padding
 
 def xor(x, y): return bytes([a ^ b for a, b in zip(x, y)])
 
-key = b'0123456789abcdef'
+key = b'\x01\x23\x45\x67\x89\xab\xcd\xef\x01\x23\x45\x67\x89\xab\xcd\xef'
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind(('127.0.0.1', int(sys.argv[1]))) #v4-only dank AF_INET. use AF_INET6 for v6
@@ -36,17 +36,23 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 
                 print(f"Received all data from {client_address[0]}:{client_address[1]}, unpadding now...")
 
+                a = bytearray()
                 for q in qs:
                     dc = xor(ciphertext, key)
-                    xor(dc, q)
+                    plain = xor(dc, q)
+
+                    print(f"Plain: {plain}")
 
                     try:
                         unpadder = padding.PKCS7(128).unpadder()
-                        unpadder.update(dc)
+                        unpadder.update(plain)
                     except:
-                        client_socket.sendall(b'00')
+                        # unpadding failed
+                        client_socket.sendall(b'\x00')
                     else:
-                        client_socket.sendall(b'01')
+                        # unpadding succeeded
+                        client_socket.sendall(b'\x01')
+
     except KeyboardInterrupt:
         print("\nExiting...")
         exit(0)

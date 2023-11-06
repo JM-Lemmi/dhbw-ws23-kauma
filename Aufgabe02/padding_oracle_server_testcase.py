@@ -10,3 +10,15 @@ ciphertext = xor(plaintext, key)
 print(ciphertext.hex())
 print(len(ciphertext))
 # 6946290be6dfa586724a360dfcc7a4ee
+
+# decryption test
+dc = xor(ciphertext, key)
+
+
+for i in range(256):
+    q = (b'\x00' * 15) + int.to_bytes(i, byteorder='little')
+    print(q.hex())
+
+    plain = xor(dc, q)
+
+    print(f"Plain: {plain}")

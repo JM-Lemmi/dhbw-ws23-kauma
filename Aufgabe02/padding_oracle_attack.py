@@ -3,7 +3,7 @@
 import socket
 import time
 
-ciphertext = bytes.fromhex('6946290be6dfa586724a360dfcc7a4ee')
+ciphertext = bytes.fromhex('6946290be6dfa586724a360dfcc7a400') # changed ee to 00 in the end
 l = 256
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -12,17 +12,23 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     s.sendall(ciphertext)
     s.sendall(l.to_bytes(2, byteorder='little'))
+    
     for i in range(0, l):
-        s.sendall((b'\x00' * 15) + int.to_bytes(i, byteorder='little'))
+        q = (b'\x00' * 15) + int.to_bytes(i, byteorder='little')
+        s.sendall(q)
 
-    print("Sent all data to padding oracle server, waiting for answer...")
+    print(f"Sent all data to padding oracle server, waiting for answer of length {l}...")
 
-    for i in range(0, l):
-        success = s.recv(1)
-        if success == b'\x00':
+    success = bytearray()
+    while len(success) < l: success += s.recv(1)
+
+    print(success[1])
+
+    for i, s in enumerate(success):
+        if s == 0:
             print(f"Byte {i} is correct")
             exit(0)
-        elif success == b'\x01':
+        elif s == 1:
             print(f"Byte {i} is wrong")
         else:
-            print(f"Weird Bytes returned, wtf: {success}")
+            print(f"Weird Bytes returned, wtf: {s}")

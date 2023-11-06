@@ -35,29 +35,27 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 while len(ciphertext) < 16: ciphertext += client_socket.recv(1) # Ciphertext
                 while len(l) < 2: l += client_socket.recv(1) # l
                 l_int = int.from_bytes(l, byteorder='little')
+                print(l_int)
 
-                qs = [bytearray()] * l_int
-                for i in range(0, l_int):
-                    while len(qs[i]) < 16 * l_int: qs[i] += client_socket.recv(1) # q-blöcke
-                
-                print(f"Received all data from {client_address[0]}:{client_address[1]}, unpadding now...")
-
-                a = bytearray()
-                for q in qs:
+                a = bytearray() #results
+                for i in range(l_int):
+                    q = bytearray()
+                    while len(q) < 16: q += client_socket.recv(1) # q
                     dc = xor(ciphertext, key)
                     plain = xor(dc, q)
-
-                    print(f"Plain: {plain}")
 
                     try:
                         unpadder = padding.PKCS7(128).unpadder()
                         unpadder.update(plain)
                     except:
                         # unpadding failed
-                        client_socket.sendall(b'\x00')
+                        a += b'\x00'
                     else:
                         # unpadding succeeded
-                        client_socket.sendall(b'\x01')
+                        a += b'\x01'
+                
+                print(f"unpadding finished, sending results of length {len(a)}...")
+                client_socket.sendall(a)
 
     except KeyboardInterrupt:
         print("\nExiting...")

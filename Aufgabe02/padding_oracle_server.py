@@ -4,7 +4,7 @@
 
 import socket
 import sys
-import cryptography
+from cryptography.hazmat.primitives import padding
 
 def xor(x, y): return bytes([a ^ b for a, b in zip(x, y)])
 
@@ -18,30 +18,31 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     while True:
         # accept incoming connections
         client_socket, client_address = s.accept()
-        print(f"Accepted connection from {client_address[0]}:{client_address[1]}")
+        with client_socket:
+            print(f"Accepted connection from {client_address[0]}:{client_address[1]}")
 
-        client_socket.sendall(b"Welcome to the padding oracle server!\n")
-        ciphertext = client_socket.recv(16) # Ciphertext
-        l = client_socket.recv(2) # l
-        l_int = int.from_bytes(l, byteorder='little')
+            #client_socket.sendall(b"Welcome to the padding oracle server!\n")
 
-        qs = [None] * l_int
-        for i in range(0, l_int):
-            qs[i] = client_socket.recv(16 * l) # q-blöcke
+            ciphertext = bytearray()
+            l = bytearray()
+            while len(ciphertext) < 16: ciphertext += client_socket.recv(1) # Ciphertext
+            while len(l) < 2: l += client_socket.recv(1) # l
+            l_int = int.from_bytes(l, byteorder='little')
 
-        for q in qs:
-            dc = xor(ciphertext, key)
-            xor(dc, q)
+            qs = [bytearray()] * l_int
+            for i in range(0, l_int):
+                while len(qs[i]) < 16 * l_int: qs[i] += client_socket.recv(1) # q-blöcke
+            
+            print(f"Received all data from {client_address[0]}:{client_address[1]}, unpadding now...")
 
-            # TODO: check padding here
-            try:
-                cryptography.unpadder(dc, 16)
-            except:
-                client_socket.sendall(b'00')
-            else:
-                client_socket.sendall(b'01')
+            for q in qs:
+                dc = xor(ciphertext, key)
+                xor(dc, q)
 
-        client_socket.close()
-
-    s.close() #ich dachte das with kann das automatisch schließen, und es scheint auch nicht mehr so richt zu existieren, aber der port ist noch ghost belegt. netstat -tulpen zeigt ihn nicht mehr als belegt an, aber wenn ich den server neu starte, kommt die fehlermeldung, dass der port schon belegt ist. wenn ich den port ändere, gehts wieder.
-        # needs reuse
+                try:
+                    unpadder = padding.PKCS7(128).unpadder()
+                    unpadder.update(dc)
+                except:
+                    client_socket.sendall(b'00')
+                else:
+                    client_socket.sendall(b'01')

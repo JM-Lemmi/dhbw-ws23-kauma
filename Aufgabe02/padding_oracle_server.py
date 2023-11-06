@@ -28,16 +28,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             with client_socket:
                 print(f"Accepted connection from {client_address[0]}:{client_address[1]}")
 
-                #client_socket.sendall(b"Welcome to the padding oracle server!\n")
-
                 ciphertext = bytearray()
-                l = bytearray()
                 while len(ciphertext) < 16: ciphertext += client_socket.recv(1) # Ciphertext
 
                 while True:
+                    l = bytearray()
                     while len(l) < 2: l += client_socket.recv(1) # l
                     l_int = int.from_bytes(l, byteorder='little')
-                    if l_int == 0: break #allows receiving multiple batches of q until 0x0000 is sent as l
+                    if l_int == 0: print("Received Disconnect from Client"); break #allows receiving multiple batches of q until 0x0000 is sent as l
+                    print(f"Waiting to receive {l_int} blocks...")
 
                     a = bytearray() #results
                     for i in range(l_int):
@@ -63,4 +62,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     except KeyboardInterrupt:
         print("\nExiting...")
+        s.close() #with catcht hier nicht, daher manuell schließen
+        client_socket.close()
         exit(0)

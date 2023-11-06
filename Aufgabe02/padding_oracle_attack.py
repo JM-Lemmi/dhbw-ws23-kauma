@@ -3,7 +3,7 @@
 import socket
 import time
 
-ciphertext = bytes.fromhex('6946290be6dfa586724a360dfcc7a400') # changed ee to 00 in the end
+ciphertext = bytes.fromhex('6946290be6dfa586724a360dfcc7a4ee') # changed ee to 00 in the end
 l = 256
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

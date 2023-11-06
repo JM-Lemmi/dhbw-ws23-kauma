@@ -33,30 +33,33 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 ciphertext = bytearray()
                 l = bytearray()
                 while len(ciphertext) < 16: ciphertext += client_socket.recv(1) # Ciphertext
-                while len(l) < 2: l += client_socket.recv(1) # l
-                l_int = int.from_bytes(l, byteorder='little')
 
-                a = bytearray() #results
-                for i in range(l_int):
-                    q = bytearray()
-                    while len(q) < 16: q += client_socket.recv(1) # q
-                    dc = xor(ciphertext, key)
-                    plain = xor(dc, q)
+                while True:
+                    while len(l) < 2: l += client_socket.recv(1) # l
+                    l_int = int.from_bytes(l, byteorder='little')
+                    if l_int == 0: break #allows receiving multiple batches of q until 0x0000 is sent as l
 
-                    try:
-                        unpadder = padding.PKCS7(128).unpadder()
-                        unpadder.update(plain)
-                        unpadder.finalize()
-                    except ValueError:
-                        # unpadding failed
-                        a += b'\x00'
-                    else:
-                        # unpadding succeeded
-                        a += b'\x01'
-                        print(f"Unpadding succeeded at position {i}.")
-                
-                print("Unpadding finished.")
-                client_socket.sendall(a)
+                    a = bytearray() #results
+                    for i in range(l_int):
+                        q = bytearray()
+                        while len(q) < 16: q += client_socket.recv(1) # q
+                        dc = xor(ciphertext, key)
+                        plain = xor(dc, q)
+
+                        try:
+                            unpadder = padding.PKCS7(128).unpadder()
+                            unpadder.update(plain)
+                            unpadder.finalize()
+                        except ValueError:
+                            # unpadding failed
+                            a += b'\x00'
+                        else:
+                            # unpadding succeeded
+                            a += b'\x01'
+                            print(f"Unpadding succeeded at position {i}.")
+                    
+                    print("Unpadding finished.")
+                    client_socket.sendall(a)
 
     except KeyboardInterrupt:
         print("\nExiting...")

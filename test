@@ -1,0 +1,11 @@
+#! /bin/bash
+
+for i in ./testcases/*.in.json; do
+    n=${i#./testcases/}; n=${n%.in.json}
+
+    if diff <(./kauma ./testcases/${n}.in.json | jq -S . -) <(jq -S . ./testcases/${n}.out.json); then
+        echo "[✔] Test ${n} passed"
+    else
+        echo "[✘] Test ${n} failed"
+    fi
+done

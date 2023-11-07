@@ -5,8 +5,15 @@ import time
 
 def xor(x: bytes, y: bytes) -> bytes: return bytes([a ^ b for a, b in zip(x, y)])
 def padleft(b: bytes, l: int) -> bytes: return (b'\x00' * (l - len(b))) + b
+def padright(b: bytes, l: int) -> bytes: return b + (b'\x00' * (l - len(b)))
 
-ciphertext = bytes.fromhex('6946290be6dfa586724a360dfcc7a4ee') # changed ee to 00 in the end
+def pkcs7zeropad(l: int) -> bytes:
+    """ Returns a valid pkcs7 padding of length l """
+    if l > 16: raise ValueError("l must be <= 16")
+    return (b'\x00' * (16 - l)) + int.to_bytes(l, byteorder='little') * l
+
+ciphertext = bytes.fromhex('f680eaea09cfb737acd7bdde528bf05d')
+iv = b'\x98\x91\xc0\xde\xe5\x92\x34\x15\xcc\x9f\xd8\xe6\xaf\xb2\x57\xe6'
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect(('127.0.0.1', 1337))
@@ -14,17 +21,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     s.sendall(ciphertext)
 
-    key = bytearray(b'\x00' * 16)
-    paddingrotator = bytearray(b'\x00\x01\x02\x03\x04\x05\x06\x07\x08')
-    for p in range(16): #länge des ciphers
-        s.sendall(b'\x00\x01') # 256 q blocks
-        
+    dc = bytearray(b'\x00' * 16)
+    for p in range(16): # länge des ciphers
+        s.sendall(b'\x00\x01') # 256 q blocks (0x0100 in little endian)
+
         for i in range(256):
-            q = padleft(int.to_bytes(i, byteorder='little') * (256 ^ p), 16)
-            q = xor(q, key)
-            q = xor(q, padleft(paddingrotator[:p+1], 16))
+            q_short = padleft(int.to_bytes(i), 16-p) # counting 1-256, filled from the left with 0
+            dc_p = xor(pkcs7zeropad(p+1), dc)[16-p:] # only the right bytes of dc with the correct padding xor.
+            q = q_short + dc_p
+            assert len(q) == 16
             s.sendall(q)
-            print(f"sent block {i}")
 
         print(f"Sent all data to padding oracle server, waiting for answer...")
 
@@ -33,13 +39,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         for i, t in enumerate(success):
             if t == 1:
-                print(f"Byte {i} at position {p} is correct")
-                key[15-p] = i
+                # TODO: no check if the padding is correct on accident. one to the left of this position also needs to be roated as a test
+                print(f"Byte {int.to_bytes(i, byteorder='little')} at position {p} is correct (before xor with padding)")
+                dc[16-1-p] = xor(padleft(int.to_bytes(i, byteorder='big'), 16-p), pkcs7zeropad(p+1))[16-1-p] # set the correct byte in the zeroiv
             elif t == 0:
-                print(f"Byte {i} is wrong")
+                #print(f"Byte {i} is wrong")
+                pass
             else:
                 print(f"Weird Bytes returned, wtf: {t}")
-    
+                exit(1)
+
     s.sendall(b'\x00\x00') # disconnect
-    
-    print(f"Key: {key.hex()}")
+
+    print(f"DC: {dc}")
+    plain = xor(dc, iv)
+    print(f"Plaintext is: {plain}")

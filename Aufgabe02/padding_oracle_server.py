@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives import padding
 
 def xor(x, y): return bytes([a ^ b for a, b in zip(x, y)])
 
-key = b'\x01\x23\x45\x67\x89\xab\xcd\xef\x01\x23\x45\x67\x89\xab\xcd\xef'
+key = b'\x06\x74\x46\x58\x83\x29\xeb\x4b\x13\x21\x16\x52\x88\x55\xce\xba'
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     while True:
@@ -42,8 +42,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     for i in range(l_int):
                         q = bytearray()
                         while len(q) < 16: q += client_socket.recv(1) # q
-                        dc = xor(ciphertext, key)
-                        plain = xor(dc, q)
+                        dc = xor(ciphertext, key) # <- this is decryption
+                        plain = xor(dc, q)        # <- this is cbc
 
                         try:
                             unpadder = padding.PKCS7(128).unpadder()

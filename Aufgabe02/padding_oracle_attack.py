@@ -38,9 +38,30 @@ def attack(hostname: str, port: int, ciphertext: bytes, iv: bytes) -> bytes:
 
             for i, t in enumerate(success):
                 if t == 1:
-                    # TODO: no check if the padding is correct on accident. one to the left of this position also needs to be roated as a test
-                    logging.debug(f"Byte {int.to_bytes(i, byteorder='little')} at position {p} is correct (before xor with padding)")
-                    dc[16-1-p] = xor(padleft(int.to_bytes(i, byteorder='big'), 16-p), pkcs7zeropad(p+1))[16-1-p] # set the correct byte in the zeroiv
+                    if p == 15:
+                        # correct, no false positive possible
+                        logging.debug(f"Byte {int.to_bytes(i, byteorder='little')} at position {p} is correct (before xor with padding)")
+                        dc[16-1-p] = xor(padleft(int.to_bytes(i, byteorder='big'), 16-p), pkcs7zeropad(p+1))[16-1-p] # set the correct byte in the zeroiv
+                    else:
+                        # Checking for false positive
+                        # repeating code from ln 28ff.
+                        q_short = padleft(b'\xff' + int.to_bytes(i), 16-p) # added 0xff (inverse of 0x00) left of the currently counting number
+                        dc_p = xor(pkcs7zeropad(p+1), dc)[16-p:]
+                        q = q_short + dc_p
+                        assert len(q) == 16
+
+                        s.sendall(b'\x01\x00')
+                        s.sendall(q)
+                        sucdouble = s.recv(1)
+                        if sucdouble == b'\x01':
+                            # true positive
+                            logging.debug(f"Byte {int.to_bytes(i, byteorder='little')} at position {p} is correct (before xor with padding)")
+                            dc[16-1-p] = xor(padleft(int.to_bytes(i, byteorder='big'), 16-p), pkcs7zeropad(p+1))[16-1-p] # set the correct byte in the zeroiv
+                        else:
+                            # false positive
+                            logging.debug(f"Byte {int.to_bytes(i, byteorder='little')} at position {p} is wrong (false positive)")
+
+                    
                 elif t == 0:
                     #logging.debug(f"Byte {i} is wrong")
                     pass

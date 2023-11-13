@@ -1,11 +1,14 @@
 #! /bin/python3
 
-import sys
+import sys, os
 import json
 import base64
 
 from Aufgabe01 import bytenigma
 from Aufgabe02 import padding_oracle_attack
+
+import logging
+if os.environ.get('DEBUG', False): logging.basicConfig(level=logging.DEBUG)
 
 with open(sys.argv[1], 'r') as f:
   data = json.load(f)

@@ -1,5 +1,7 @@
 #! /bin/bash
 
+success=1
+
 for i in ./testcases/*.in.json; do
     n=${i#./testcases/}; n=${n%.in.json}
 
@@ -7,5 +9,12 @@ for i in ./testcases/*.in.json; do
         echo "[✔] Test ${n} passed"
     else
         echo "[✘] Test ${n} failed"
+        success=0
     fi
 done
+
+if [ $success -eq 1 ]; then
+    exit 0
+else
+    exit 1
+fi

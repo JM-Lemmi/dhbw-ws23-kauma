@@ -38,6 +38,7 @@ def attack(hostname: str, port: int, ciphertext: bytes, iv: bytes) -> bytes:
 
             for i, t in enumerate(success):
                 if t == 1:
+                    # TODO: only first round!
                     if p == 15:
                         # correct, no false positive possible
                         logging.debug(f"Byte {int.to_bytes(i, byteorder='little')} at position {p} is correct (before xor with padding)")
@@ -52,7 +53,7 @@ def attack(hostname: str, port: int, ciphertext: bytes, iv: bytes) -> bytes:
 
                         s.sendall(b'\x01\x00')
                         s.sendall(q)
-                        sucdouble = s.recv(1)
+                        while len(sucdouble) < 1: sucdouble += s.recv(1)
                         if sucdouble == b'\x01':
                             # true positive
                             logging.debug(f"Byte {int.to_bytes(i, byteorder='little')} at position {p} is correct (before xor with padding)")

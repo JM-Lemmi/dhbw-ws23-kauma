@@ -10,6 +10,9 @@ for i in ./testcases/*.in.json; do
     else
         echo "[✘] Test ${n} failed"
         success=0
+        if [[ "${1}" == "-e" ]]; then
+            exit 1
+        fi
     fi
 done
 

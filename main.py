@@ -28,6 +28,10 @@ match data["action"]:
     exponents = block_to_poly.block2poly(data["block"])
     json_out = json.dumps({"exponents": exponents})
   
+  case 'gcm-poly2block':
+    block = block_to_poly.poly2block(data["exponents"])
+    json_out = json.dumps({"block": block})
+  
   case _:
     exit("Not implemented")
 

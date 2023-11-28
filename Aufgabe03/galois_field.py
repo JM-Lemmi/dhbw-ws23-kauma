@@ -2,7 +2,7 @@
 from __future__ import annotations
 import logging
 import base64
-from typing import List
+from typing import Any, List
 
 # das halt richtig hässlich, aber python kann halt keine bytes ¯\_(ツ)_/¯
 # wenn ich C könnte würde ich das da machen
@@ -35,6 +35,10 @@ class galois_field_element:
             else:
                 pass
         return galois_field_element.from_exponents(l)
+
+    @staticmethod
+    def from_blockbytes(block: bytes) -> galois_field_element:
+        return galois_field_element.from_block(base64.b64encode(block).decode('utf-8'))
     
     def to_exponents(self) -> List[int]:
         """ return list of exponents """
@@ -61,6 +65,9 @@ class galois_field_element:
         
         return str(base64.b64encode(int(blockstr, base=2).to_bytes(length=16, byteorder='big')), 'utf-8')
 
+    def to_blockbytes(self) -> bytes:
+        return base64.b64decode(self.to_block())
+
     ### OPERATORS ###
     
     def __mul__(self, other: galois_field_element) -> galois_field_element:
@@ -72,6 +79,9 @@ class galois_field_element:
         gf = galois_field_element(result)
         gf._reduce()
         return gf
+
+    def __xor__(self, other: galois_field_element) -> galois_field_element:
+        return galois_field_element(self.value ^ other.value)
     
     def _reduce(self):
         r = galois_field_element.from_exponents([128,7,2,1,0])

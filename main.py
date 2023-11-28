@@ -6,7 +6,7 @@ import base64
 
 from Aufgabe01 import bytenigma
 from Aufgabe02 import padding_oracle_attack
-from Aufgabe03.block_to_poly import galois_field_element
+from Aufgabe03.galois_field import galois_field_element
 
 import logging
 if os.environ.get('DEBUG', False): logging.basicConfig(level=logging.DEBUG)

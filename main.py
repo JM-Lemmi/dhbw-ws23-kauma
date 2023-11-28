@@ -32,6 +32,12 @@ match data["action"]:
     block = galois_field_element.from_exponents(data["exponents"]).to_block()
     json_out = json.dumps({"block": block})
   
+  case 'gcm-clmul':
+    a = galois_field_element.from_block(data["a"])
+    b = galois_field_element.from_block(data["b"])
+    c = a*b
+    json_out = json.dumps({"a_times_b": c.to_block()})
+  
   case _:
     exit("Not implemented")
 

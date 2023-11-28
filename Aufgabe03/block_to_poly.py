@@ -60,3 +60,22 @@ class galois_field_element:
             blockstr = blockstr + str(j)
         
         return str(base64.b64encode(int(blockstr, base=2).to_bytes(length=16, byteorder='big')), 'utf-8')
+
+    ### OPERATORS ###
+    
+    def __mul__(self, other: galois_field_element) -> galois_field_element:
+        result = 0
+
+        for e in other.to_exponents():
+            result = result ^ (self.value << e)
+
+        gf = galois_field_element(result)
+        gf._reduce()
+        return gf
+    
+    def _reduce(self):
+        r = galois_field_element.from_exponents([128,7,2,1,0])
+
+        while self.value.bit_length() >= r.value.bit_length():
+            rs: int = r.value << (self.value.bit_length() - r.value.bit_length())
+            self.value = self.value ^ rs

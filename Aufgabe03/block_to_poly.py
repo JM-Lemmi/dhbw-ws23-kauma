@@ -1,4 +1,5 @@
 
+from __future__ import annotations
 import logging
 import base64
 from typing import List
@@ -8,25 +9,54 @@ from typing import List
 def bytes_to_binstring(b: bytes) -> str:
     return ''.join(f'{x:08b}' for x in b)
 
-def block2poly(block: str) -> List[int]:
-    l = []
-    for i, v in enumerate(bytes_to_binstring(base64.b64decode(block))): # decode b64, then concert to binary string
-        if v == '1':
-            l.append(i) # +2 because index starts at 2
-        else:
-            pass
-    return l
+# das ist nicht allgemein, sondern für aes_gcm
+class galois_field_element:
 
-"""
-gets array of exponents and returns base64 encoded block
-"""
-def poly2block(exponents: List[int]) -> str:
-    block = [0] * 128
-    for i in exponents:
-        block[i] = '1'
+    ### CONSTRUCTORS and EXPORTERS ###
 
-    blockstr: str = ""
-    for j in block:
-        blockstr = blockstr + str(j)
+    def __init__(self, value: int = None):
+        self.value: int = value
+
+    @staticmethod
+    def from_exponents(exponents: List[int]) -> galois_field_element:
+        """ constructor: list of exponents as input """
+        v=0
+        for i in exponents:
+            v = (2 ** i) + v
+        return galois_field_element(v)
+
+    @staticmethod
+    def from_block(block: str) -> galois_field_element:
+        """ constructor: base64 string block as input """
+        l = []
+        for i, v in enumerate(bytes_to_binstring(base64.b64decode(block))): # decode b64, then concert to binary string
+            if v == '1':
+                l.append(i)
+            else:
+                pass
+        return galois_field_element.from_exponents(l)
     
-    return str(base64.b64encode(int(blockstr, base=2).to_bytes(length=16, byteorder='big')), 'utf-8')
+    def to_exponents(self) -> List[int]:
+        """ return list of exponents """
+        l = []
+        for i in range(self.value.bit_length()):
+            if self.value & (1 << i):
+                l.append(i)
+        
+        return sorted(l)
+
+    """
+    gets array of exponents and returns base64 encoded block
+    """
+    def to_block(self) -> str:
+        exponents = self.to_exponents()
+
+        block = [0] * 128
+        for i in exponents:
+            block[i] = '1'
+
+        blockstr: str = ""
+        for j in block:
+            blockstr = blockstr + str(j)
+        
+        return str(base64.b64encode(int(blockstr, base=2).to_bytes(length=16, byteorder='big')), 'utf-8')

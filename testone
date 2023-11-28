@@ -2,6 +2,8 @@
 
 # Usage: ./testone <aufgabe> <testcase>
 
+export DEBUG=True
+
 if diff <(./kauma ./testcases/aufgabe${1}_testcase${2}.in.json | jq -S . -) <(jq -S . ./testcases/aufgabe${1}_testcase${2}.out.json); then
     echo "[✔] Test passed"
     exit 0

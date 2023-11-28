@@ -6,7 +6,7 @@ import base64
 
 from Aufgabe01 import bytenigma
 from Aufgabe02 import padding_oracle_attack
-from Aufgabe03 import block_to_poly
+from Aufgabe03.block_to_poly import galois_field_element
 
 import logging
 if os.environ.get('DEBUG', False): logging.basicConfig(level=logging.DEBUG)
@@ -25,11 +25,11 @@ match data["action"]:
     json_out = json.dumps({"plaintext": base64.b64encode(plaintext).decode('utf-8')})
   
   case 'gcm-block2poly':
-    exponents = block_to_poly.block2poly(data["block"])
+    exponents = galois_field_element.from_block(data["block"]).to_exponents()
     json_out = json.dumps({"exponents": exponents})
   
   case 'gcm-poly2block':
-    block = block_to_poly.poly2block(data["exponents"])
+    block = galois_field_element.from_exponents(data["exponents"]).to_block()
     json_out = json.dumps({"block": block})
   
   case _:

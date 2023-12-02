@@ -6,7 +6,8 @@ import base64
 
 from Aufgabe01 import bytenigma
 from Aufgabe02 import padding_oracle_attack
-from Aufgabe03 import block_to_poly
+from Aufgabe03.galois_field import galois_field_element
+from Aufgabe03 import gcm
 
 import logging
 if os.environ.get('DEBUG', False): logging.basicConfig(level=logging.DEBUG)
@@ -25,8 +26,32 @@ match data["action"]:
     json_out = json.dumps({"plaintext": base64.b64encode(plaintext).decode('utf-8')})
   
   case 'gcm-block2poly':
-    exponents = block_to_poly.block2poly(data["block"])
+    exponents = galois_field_element.from_block(data["block"]).to_exponents()
     json_out = json.dumps({"exponents": exponents})
+  
+  case 'gcm-poly2block':
+    block = galois_field_element.from_exponents(data["exponents"]).to_block()
+    json_out = json.dumps({"block": block})
+  
+  case 'gcm-clmul':
+    a = galois_field_element.from_block(data["a"])
+    b = galois_field_element.from_block(data["b"])
+    c = a*b
+    json_out = json.dumps({"a_times_b": c.to_block()})
+  
+  case 'gcm-encrypt':
+    ciphertext, auth_tag, Y0, H = gcm.gcm_encrypt(
+      base64.b64decode(data["key"]),
+      base64.b64decode(data["nonce"]),
+      base64.b64decode(data["plaintext"]),
+      base64.b64decode(data["associated_data"])
+    )
+    json_out = json.dumps(
+      {"ciphertext": base64.b64encode(ciphertext).decode('utf-8'),
+       "auth_tag": base64.b64encode(auth_tag).decode('utf-8'),
+       "Y0": base64.b64encode(Y0).decode('utf-8'),
+       "H": base64.b64encode(H).decode('utf-8')}
+    )
   
   case _:
     exit("Not implemented")
